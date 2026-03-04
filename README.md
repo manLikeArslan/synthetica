@@ -1,5 +1,7 @@
 # Synthetica Blog Scraper
 
+![Screenshot](screenshot.jpg)
+
 Synthetica is a high-performance, visually striking data extraction module built with Node.js, Puppeteer, and a web-based "Analog Lab" interface. It is designed to autonomously read lists of URLs from CSV files, scrape the article content while bypassing basic bot-protection using stealth routing, and export the content into beautifully formatted Markdown files.
 
 ## Features
