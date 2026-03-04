@@ -20,7 +20,7 @@
 - [Error Handling & Recovery](#error-handling--recovery)
 - [Development Notes](#development-notes)
 - [Troubleshooting](#troubleshooting)
-- [Future Roadmap](#future-roadmap)
+- [License](#license)
 
 ---
 
@@ -540,10 +540,9 @@ npm install
 
 ---
 
-
 ## License
 
-ISC License - See repository for full details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Support
 
