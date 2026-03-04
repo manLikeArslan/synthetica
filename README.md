@@ -540,19 +540,6 @@ npm install
 
 ---
 
-## Future Roadmap
-
-- [ ] Tauri v2 desktop application with native installers
-- [ ] User authentication & multi-user support
-- [ ] Cloud storage integration (AWS S3, Google Drive)
-- [ ] Advanced CSS selector support for manual content extraction
-- [ ] GUI-based retry scheduler and job history backup
-- [ ] Export formats: JSON, DOCX, HTML in addition to Markdown
-- [ ] Proxy rotation support for large-scale operations
-- [ ] Content fingerprinting to detect near-duplicate extractions
-- [ ] Built-in article metadata extraction (author, date, tags)
-
----
 
 ## License
 
@@ -564,4 +551,4 @@ For issues, questions, or feature requests, please open a GitHub issue or contac
 
 ---
 
-**Built with ❤️ using Node.js, Puppeteer, and beautiful design.**
+**Built with ❤️ by manLikeArslan using Node.js, Puppeteer, and beautiful design.**
