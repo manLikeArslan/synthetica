@@ -1,0 +1,110 @@
+/* Custom styles not covered by Tailwind */
+
+body {
+    background-color: #d4d1c4;
+    background-image: radial-gradient(#ccc 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* Chassis Texture */
+.chassis-texture {
+    background-image: url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 3h1v1H1V3zm2-2h1v1H3V1z' fill='%23000000' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+/* Carbon Fiber Texture on Terminate Button */
+.carbon-texture {
+    background-image: url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 3h1v1H1V3zm2-2h1v1H3V1z' fill='%23ffffff' fill-opacity='0.08' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+/* LCD Text Glow */
+.lcd-text-shadow {
+    text-shadow: 0 0 5px rgba(209, 230, 200, 0.6);
+}
+
+/* Oscilloscope Grid */
+.oscilloscope-grid {
+    background-image:
+        linear-gradient(rgba(209, 230, 200, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(209, 230, 200, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* Progress Bar Scanline */
+.progress-scanline {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    animation: sweep 2s linear infinite;
+}
+
+@keyframes sweep {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(200%);
+    }
+}
+
+/* Log Entries */
+.log-entry {
+    opacity: 0;
+    transform: translateY(6px);
+    animation: log-appear 0.3s forwards ease-out;
+    margin-bottom: 2px;
+}
+
+.log-entry::before {
+    content: '▸ ';
+    opacity: 0.4;
+}
+
+.log-entry.success {
+    color: #a8d89a;
+}
+
+.log-entry.error {
+    color: #e87c6c;
+}
+
+.log-entry.system {
+    color: #D1E6C8;
+    opacity: 0.6;
+    font-style: italic;
+}
+
+.log-entry.skip {
+    color: #8a9079;
+}
+
+@keyframes log-appear {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Custom Scrollbar for LCD panels */
+#logs::-webkit-scrollbar {
+    width: 6px;
+}
+
+#logs::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+#logs::-webkit-scrollbar-thumb {
+    background: rgba(209, 230, 200, 0.2);
+    border-radius: 3px;
+}
+
+#logs::-webkit-scrollbar-thumb:hover {
+    background: rgba(209, 230, 200, 0.4);
+}
+
+/* Toggle knob active state */
+.toggle-knob.active {
+    transform: translateX(48px);
+    border-bottom-width: 2px;
+    border-right-width: 2px;
+    box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.15);
+}

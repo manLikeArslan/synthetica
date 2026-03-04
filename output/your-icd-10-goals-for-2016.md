@@ -1,0 +1,15 @@
+# Your ICD-10 Goals for 2016
+
+*Original URL: https://www.medicalbillersandcoders.com/blog/your-icd-10-goals-for-2016/*
+
+---
+
+Come 2016 and the medical fraternity is close to panicking, worrying about the plethora of regulations that will certainly herald the new year with. However, everything is not as bad as it seems, and the world is certainly not coming to an end. With no noticeable increase in denials, experts opine that the key still lies in preparation. Most of the practices that were savvy enough to update their EHRs are content with the knowledge that the new codes are going to be just fine. Most of the worries regarding the [ICD-10 transition](https://www.medicalbillersandcoders.com/icd9to10.aspx) like the anticipated 20 to 25 percent drop in coder productivity proved to be false calls.
+
+Most payers have been adjudicating, and that seems to be making a lot of sense according to Elizabeth Woodcock of Woodcock and Associates. However, her fears are not unfounded when she expects a tight squeeze in the next year or year and a half. Practices cannot withstand a wave of denials, which will probably fizzle out; though ignoring such a possibility is at their risk. It is not just a matter of getting the codes right in the coming year, 2016 will probably hold more challenges in areas like pre-authorization, and pre-certification that may have stiffer requirements prescribed.
+
+There could be a change in the payment policies, with conditions that were until now covered may be left out in 2016. If practices want ICD-10 to go on as smoothly as until now, it is better to be prepared with financial cushions that can take care of unexpected increase in denials. More so, if your coding is way below par and leaves a lot to be desired. Although leniency from payers is desirable, it may not happen that way one wants it to.
+
+It makes sense to keep track of denials and work on them in time. Don’t give up on training coders, and have them undergo advanced training courses in various specialties. There should, at no time, be drops in coder productivity at any cost. It pays to designate a biller who can devote a few hours exclusively for checking on policy changes that will be updated on the websites of the respective payers. While changes will be posted on the websites, it is up to the [billing companies](https://www.medicalbillersandcoders.com/) to look out for them, lest they miss them completely.
+
+Although ICD-10 was implemented as early as October, 2015 the impact is set to continue well into 2016. While it has been rosy all along, there could be drastic changes in the near future that will have a lasting impact. However, there is no need to be alarmed by all the pessimism as things won’t be so bad after all. ICD-10 will certainly do what it’s meant to do, and that is to test the agility of your practice. Once the transition sets in and new codes are tested, things should fall into place, and may lead to more hidden opportunities that all hadn’t hoped for in the least. Challenges and taxing situations always lead to increased efficiency, and ICD-10 is no exception.

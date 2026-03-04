@@ -1,0 +1,11 @@
+{
+  "concurrency": 3,
+  "timeoutMs": 30000,
+  "csvDir": "./csv",
+  "outputDir": "./output",
+  "stripImages": true,
+  "outputFormat": "md",
+  "filenamePattern": "title",
+  "maxRetries": 3,
+  "retryDelayMs": 2000
+}

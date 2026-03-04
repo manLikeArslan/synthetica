@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthetica Analog Lab - Control Deck</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "chassis": "#EBE9E0",
+                        "panel": "#D8D4C9",
+                        "ink": "#2A2A2A",
+                        "signal-orange": "#E35205",
+                        "safety-olive": "#5F6B4E",
+                        "tech-slate": "#4A5D68",
+                        "lcd-bg": "#2F342B",
+                        "lcd-text": "#D1E6C8",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "mono": ["Share Tech Mono", "monospace"],
+                    },
+                    boxShadow: {
+                        'depth': '4px 4px 0px rgba(0,0,0,0.15)',
+                        'depth-active': '1px 1px 0px rgba(0,0,0,0.15)',
+                        'inset-panel': 'inset 2px 2px 6px rgba(0,0,0,0.15)',
+                        'lcd-glow': '0 0 10px rgba(209, 230, 200, 0.4)',
+                    },
+                    backgroundImage: {
+                        'striped': 'repeating-linear-gradient(45deg, #4A5D68, #4A5D68 10px, #3d4c53 10px, #3d4c53 20px)',
+                    }
+                },
+            },
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js" defer></script>
+    <script src="script.js" defer></script>
+</head>
+
+<body class="flex min-h-screen items-center justify-center p-4 md:p-8 font-display text-ink overflow-x-hidden">
+
+    <!-- Main Device Chassis -->
+    <main id="app-chassis"
+        class="relative w-full max-w-[1200px] bg-chassis chassis-texture shadow-2xl rounded-lg border-2 border-[#d1cec0] flex flex-col overflow-hidden transition-all duration-300">
+
+        <!-- Drag & Drop Overlay -->
+        <div id="drop-overlay"
+            class="absolute inset-0 bg-signal-orange/90 z-30 hidden flex-col items-center justify-center backdrop-blur-sm transition-opacity opacity-0">
+            <div
+                class="border-4 border-dashed border-[#ffbca3] rounded-2xl p-12 flex flex-col items-center gap-6 animate-pulse">
+                <span class="material-symbols-outlined text-8xl text-white">upload_file</span>
+                <h2 class="text-3xl font-bold tracking-widest uppercase text-white">Drop CSV to Load</h2>
+            </div>
+        </div>
+
+        <!-- Screw Decorations -->
+        <div
+            class="absolute top-3 left-3 w-3 h-3 rounded-full bg-[#bdbaa9] border border-[#a8a595] flex items-center justify-center shadow-inner">
+            <div class="w-2 h-[1px] bg-[#8f8c7e] rotate-45"></div>
+        </div>
+        <div
+            class="absolute top-3 right-3 w-3 h-3 rounded-full bg-[#bdbaa9] border border-[#a8a595] flex items-center justify-center shadow-inner">
+            <div class="w-2 h-[1px] bg-[#8f8c7e] rotate-12"></div>
+        </div>
+        <div
+            class="absolute bottom-3 left-3 w-3 h-3 rounded-full bg-[#bdbaa9] border border-[#a8a595] flex items-center justify-center shadow-inner">
+            <div class="w-2 h-[1px] bg-[#8f8c7e] rotate-90"></div>
+        </div>
+        <div
+            class="absolute bottom-3 right-3 w-3 h-3 rounded-full bg-[#bdbaa9] border border-[#a8a595] flex items-center justify-center shadow-inner">
+            <div class="w-2 h-[1px] bg-[#8f8c7e] rotate-45"></div>
+        </div>
+
+        <!-- Header Block -->
+        <header
+            class="flex flex-col md:flex-row items-start md:items-center justify-between px-10 py-8 border-b-2 border-[#D1CEC0]">
+            <div class="flex flex-col gap-1">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-signal-orange text-4xl">tune</span>
+                    <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-ink uppercase">Synthetica</h1>
+                </div>
+                <div class="flex items-center gap-2 text-ink/60 font-mono text-sm uppercase tracking-widest pl-1">
+                    <span>Data Extraction Module</span>
+                    <span class="w-1 h-1 bg-ink/40 rounded-full"></span>
+                    <span>V2.0</span>
+                </div>
+            </div>
+            <!-- Status & Settings -->
+            <div class="flex items-center gap-4 hidden md:flex">
+                <div id="status-badge"
+                    class="flex items-center gap-3 bg-panel px-4 py-2 rounded shadow-inset-panel border border-[#c5c2b5]">
+                    <div id="status-led" class="w-3 h-3 rounded-full bg-ink/30 transition-all duration-500"></div>
+                    <span id="status-text"
+                        class="text-xs font-bold tracking-widest text-ink/80 uppercase">Offline</span>
+                </div>
+                <button id="history-btn"
+                    class="w-10 h-10 bg-panel rounded shadow-depth border-b-2 border-r-2 border-[#c5c2b5] flex items-center justify-center text-ink/70 hover:text-ink hover:bg-[#d0ccc1] active:translate-y-[2px] active:shadow-depth-active active:border-b active:border-r transition-all"
+                    title="View Extraction History">
+                    <span class="material-symbols-outlined text-[18px]">history</span>
+                </button>
+                <button id="settings-btn"
+                    class="w-10 h-10 bg-panel rounded shadow-depth border-b-2 border-r-2 border-[#c5c2b5] flex items-center justify-center text-ink/70 hover:text-ink hover:bg-[#d0ccc1] active:translate-y-[2px] active:shadow-depth-active active:border-b active:border-r transition-all"
+                    title="Configure Settings">
+                    <span class="material-symbols-outlined text-[18px]">settings</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Control Surface -->
+        <div class="p-8 md:p-10 flex flex-col gap-10">
+
+            <!-- Row 1: Action Array & Termination -->
+            <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Primary Action -->
+                <div
+                    class="lg:col-span-8 bg-panel rounded border border-[#C5C2B5] p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="flex flex-col gap-2">
+                        <h2 class="text-sm font-bold tracking-widest uppercase text-ink/70">Master Sequence Control</h2>
+                        <p class="text-xs max-w-xs leading-relaxed opacity-60">
+                            Warning: Initiating sequence will begin data extraction protocols. Ensure buffer is clear.
+                        </p>
+                        <div class="flex gap-2 mt-2">
+                            <button id="paste-url-btn"
+                                class="px-3 py-1.5 bg-panel border border-[#c5c2b5] shadow-sm rounded text-[10px] font-bold tracking-widest uppercase hover:bg-[#d0ccc1] active:translate-y-[1px] transition-all flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[14px]">link</span> Paste URLs
+                            </button>
+                            <button id="export-btn"
+                                class="px-3 py-1.5 bg-panel border border-[#c5c2b5] shadow-sm rounded text-[10px] font-bold tracking-widest uppercase hover:bg-[#d0ccc1] active:translate-y-[1px] transition-all flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[14px]">download</span> Export
+                            </button>
+                            <button id="clear-history-btn"
+                                class="px-3 py-1.5 bg-panel border border-[#c5c2b5] shadow-sm rounded text-[10px] font-bold tracking-widest uppercase text-signal-orange hover:bg-[#d0ccc1] active:translate-y-[1px] transition-all flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[14px]">delete</span> Clear History
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <!-- Initiate Toggle -->
+                        <div class="flex flex-col items-center gap-2">
+                            <label id="start-btn" class="relative inline-flex items-center cursor-pointer group">
+                                <input id="initiate-toggle" class="sr-only peer" type="checkbox" />
+                                <div
+                                    class="w-24 h-12 bg-[#ccc9bc] rounded-sm border-2 border-[#b5b2a5] shadow-inner relative transition-colors duration-200">
+                                    <div
+                                        class="toggle-knob absolute top-1 left-1 bg-signal-orange border-b-4 border-r-4 border-[#bf4404] h-9 w-10 rounded-sm shadow-depth transition-all duration-200 peer-checked:translate-x-12 group-active:shadow-depth-active group-active:translate-y-[2px] group-active:border-b-2 group-active:border-r-2 flex items-center justify-center">
+                                        <div class="w-1 h-4 bg-black/10 rounded-full"></div>
+                                        <div class="w-1 h-4 bg-black/10 rounded-full ml-1"></div>
+                                    </div>
+                                </div>
+                            </label>
+                            <span class="text-[10px] font-bold tracking-widest uppercase text-ink">Initiate</span>
+                        </div>
+                        <!-- Halt Button -->
+                        <div class="flex flex-col items-center gap-2">
+                            <button id="pause-btn" disabled
+                                class="w-20 h-12 bg-tech-slate text-[#eef2f5] rounded-sm font-bold text-xs tracking-wider border-b-4 border-r-4 border-[#37464f] shadow-depth active:shadow-depth-active active:border-b-2 active:border-r-2 active:translate-y-[2px] transition-all flex items-center justify-center group hover:bg-[#536874] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:translate-y-0 disabled:active:shadow-depth disabled:active:border-b-4 disabled:active:border-r-4">
+                                <span
+                                    class="material-symbols-outlined text-lg group-hover:scale-110 transition-transform"
+                                    id="pause-icon">pause</span>
+                            </button>
+                            <span id="pause-label"
+                                class="text-[10px] font-bold tracking-widest uppercase text-ink">Halt</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Termination Zone -->
+                <div
+                    class="lg:col-span-4 bg-[#dcd9ce] rounded border border-[#C5C2B5] p-6 shadow-inner flex flex-col justify-between relative overflow-hidden">
+                    <div
+                        class="absolute top-0 right-0 w-16 h-16 bg-striped opacity-10 -mr-8 -mt-8 rotate-45 pointer-events-none">
+                    </div>
+                    <h2 class="text-sm font-bold tracking-widest uppercase text-red-800/70 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">lock</span>
+                        Protected
+                    </h2>
+                    <div class="flex items-center justify-between mt-4">
+                        <div class="text-xs leading-tight opacity-70 max-w-[120px]">
+                            Emergency termination protocol. Use only in case of overflow.
+                        </div>
+                        <div class="flex flex-col items-center gap-2">
+                            <button id="stop-btn" disabled
+                                class="w-16 h-16 bg-[#2a2a2a] text-red-500 rounded-full border-4 border-[#444] shadow-[0_4px_6px_rgba(0,0,0,0.3)] active:shadow-none active:translate-y-[2px] transition-all flex items-center justify-center relative overflow-hidden disabled:opacity-40 disabled:cursor-not-allowed disabled:active:translate-y-0 disabled:active:shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+                                <div class="absolute inset-0 carbon-texture opacity-30"></div>
+                                <span class="material-symbols-outlined text-2xl z-10">power_settings_new</span>
+                            </button>
+                            <span class="text-[10px] font-bold tracking-widest uppercase text-red-900">Terminate</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Row 2: Telemetry Modules (LCD Readouts) -->
+            <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <!-- Total Assigned -->
+                <div
+                    class="bg-panel border border-[#C5C2B5] p-4 rounded shadow-sm flex flex-col gap-3 group hover:border-[#aaa] transition-colors">
+                    <div class="flex justify-between items-center border-b border-[#c5c2b5] pb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-[1.5px] text-ink/70">Total Assigned</span>
+                        <span
+                            class="w-1.5 h-1.5 bg-ink/20 rounded-full group-hover:bg-safety-olive transition-colors"></span>
+                    </div>
+                    <div
+                        class="bg-lcd-bg p-3 rounded shadow-inset-panel border-b border-white/10 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none">
+                        </div>
+                        <span id="stats-total"
+                            class="font-mono text-3xl md:text-4xl text-lcd-text lcd-text-shadow tracking-widest block text-right">0000</span>
+                    </div>
+                </div>
+                <!-- Active Nodes (Processed) -->
+                <div
+                    class="bg-panel border border-[#C5C2B5] p-4 rounded shadow-sm flex flex-col gap-3 group hover:border-[#aaa] transition-colors">
+                    <div class="flex justify-between items-center border-b border-[#c5c2b5] pb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-[1.5px] text-ink/70">Active Nodes</span>
+                        <span
+                            class="w-1.5 h-1.5 bg-ink/20 rounded-full group-hover:bg-safety-olive transition-colors"></span>
+                    </div>
+                    <div
+                        class="bg-lcd-bg p-3 rounded shadow-inset-panel border-b border-white/10 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none">
+                        </div>
+                        <span id="stats-current"
+                            class="font-mono text-3xl md:text-4xl text-lcd-text lcd-text-shadow tracking-widest block text-right">0000</span>
+                    </div>
+                </div>
+                <!-- Success Count -->
+                <div
+                    class="bg-panel border border-[#C5C2B5] p-4 rounded shadow-sm flex flex-col gap-3 group hover:border-[#aaa] transition-colors">
+                    <div class="flex justify-between items-center border-b border-[#c5c2b5] pb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-[1.5px] text-ink/70">Extracted</span>
+                        <span
+                            class="w-1.5 h-1.5 bg-ink/20 rounded-full group-hover:bg-safety-olive transition-colors"></span>
+                    </div>
+                    <div
+                        class="bg-lcd-bg p-3 rounded shadow-inset-panel border-b border-white/10 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none">
+                        </div>
+                        <span id="stats-success"
+                            class="font-mono text-3xl md:text-4xl text-lcd-text lcd-text-shadow tracking-widest block text-right">0000</span>
+                    </div>
+                </div>
+                <!-- Error Rate -->
+                <div
+                    class="bg-panel border border-[#C5C2B5] p-4 rounded shadow-sm flex flex-col gap-3 group hover:border-[#aaa] transition-colors">
+                    <div class="flex justify-between items-center border-b border-[#c5c2b5] pb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-[1.5px] text-ink/70">Anomalies</span>
+                        <span
+                            class="w-1.5 h-1.5 bg-ink/20 rounded-full group-hover:bg-signal-orange transition-colors"></span>
+                    </div>
+                    <div
+                        class="bg-lcd-bg p-3 rounded shadow-inset-panel border-b border-white/10 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none">
+                        </div>
+                        <span id="stats-failed"
+                            class="font-mono text-3xl md:text-4xl text-lcd-text lcd-text-shadow tracking-widest block text-right">0000</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Row 3: Progress Bar as Analog Meter -->
+            <section class="bg-panel border border-[#C5C2B5] p-4 rounded shadow-sm">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-4">
+                        <span class="text-[10px] font-bold uppercase tracking-[1.5px] text-ink/70">Buffer
+                            Throughput</span>
+                        <span id="eta-text"
+                            class="text-[10px] font-mono text-ink/50 bg-[#ccc9bc] px-2 py-0.5 rounded shadow-inner hidden">ETA:
+                            --:--</span>
+                    </div>
+                    <span id="progress-text" class="font-mono text-sm text-ink/80">0%</span>
+                </div>
+                <div
+                    class="w-full h-3 bg-lcd-bg rounded shadow-inset-panel overflow-hidden border border-[#222] relative">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none z-10">
+                    </div>
+                    <div id="progress-bar"
+                        class="h-full bg-safety-olive shadow-[0_0_8px_rgba(95,107,78,0.6)] transition-all duration-500 ease-out relative"
+                        style="width: 0%">
+                        <div class="absolute inset-0 progress-scanline"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Row 4: Live Waveform (Oscilloscope) -->
+            <section class="flex flex-col gap-2">
+                <div class="flex items-center justify-between px-1">
+                    <h2 class="text-sm font-bold tracking-widest uppercase text-ink/80 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base">analytics</span>
+                        Live Waveform
+                    </h2>
+                    <div class="flex gap-2">
+                        <div id="waveform-led" class="w-2 h-2 rounded-full bg-ink/20"></div>
+                        <div class="w-2 h-2 rounded-full bg-ink/20"></div>
+                        <div class="w-2 h-2 rounded-full bg-ink/20"></div>
+                    </div>
+                </div>
+                <div class="bg-panel p-4 rounded border border-[#C5C2B5] shadow-sm">
+                    <div
+                        class="relative w-full h-48 bg-lcd-bg rounded shadow-inset-panel overflow-hidden border border-[#222]">
+                        <!-- Grid -->
+                        <div class="absolute inset-0 oscilloscope-grid opacity-30 z-10 pointer-events-none"></div>
+                        <!-- Screen Glare -->
+                        <div
+                            class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent z-20 pointer-events-none">
+                        </div>
+                        <!-- Labels -->
+                        <div class="absolute top-3 left-3 z-10 flex flex-col gap-0.5">
+                            <span class="font-mono text-[10px] text-lcd-text/50 uppercase tracking-widest">Channel A —
+                                Throughput</span>
+                            <span class="font-mono text-[10px] text-lcd-text/80">1 event / div</span>
+                        </div>
+                        <!-- SVG Waveform -->
+                        <svg id="waveform-svg" class="absolute inset-0 w-full h-full z-0" preserveAspectRatio="none"
+                            viewBox="0 0 1000 200">
+                            <polyline id="waveform-line" fill="none" stroke="#D1E6C8" stroke-width="2" points="0,100"
+                                class="drop-shadow-[0_0_4px_rgba(209,230,200,0.6)]"></polyline>
+                            <polyline id="waveform-ghost" fill="none" stroke="#D1E6C8" stroke-width="1" opacity="0.25"
+                                points="0,100" class="drop-shadow-[0_0_2px_rgba(209,230,200,0.3)]"></polyline>
+                        </svg>
+                    </div>
+                    <!-- Decorative Knobs -->
+                    <div class="flex gap-8 mt-4 px-2">
+                        <div class="flex flex-col items-center gap-1">
+                            <div
+                                class="w-10 h-10 rounded-full bg-[#ccc9bc] border-b-2 border-r-2 border-[#a8a595] shadow-lg flex items-center justify-center relative cursor-pointer hover:rotate-45 transition-transform duration-300">
+                                <div class="w-1 h-3 bg-ink/70 absolute top-1 rounded-full"></div>
+                            </div>
+                            <span class="text-[9px] font-bold uppercase tracking-widest text-ink/60">Gain</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-1">
+                            <div
+                                class="w-10 h-10 rounded-full bg-[#ccc9bc] border-b-2 border-r-2 border-[#a8a595] shadow-lg flex items-center justify-center relative cursor-pointer hover:-rotate-45 transition-transform duration-300">
+                                <div class="w-1 h-3 bg-ink/70 absolute top-1 rounded-full"></div>
+                            </div>
+                            <span class="text-[9px] font-bold uppercase tracking-widest text-ink/60">Freq</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Row 5: Live Diagnostics (Log Output) -->
+            <section class="flex flex-col gap-2">
+                <div class="flex items-center justify-between px-1">
+                    <h2 class="text-sm font-bold tracking-widest uppercase text-ink/80 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base">terminal</span>
+                        Diagnostics Output
+                    </h2>
+                </div>
+                <div class="bg-panel p-4 rounded border border-[#C5C2B5] shadow-sm">
+                    <div
+                        class="relative w-full h-64 bg-lcd-bg rounded shadow-inset-panel overflow-hidden border border-[#222]">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none z-10">
+                        </div>
+                        <div id="logs"
+                            class="absolute inset-0 overflow-y-auto p-4 font-mono text-sm text-lcd-text leading-relaxed z-0 scroll-smooth">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Row 6: Failed URLs Recovery -->
+            <section id="failed-urls-section"
+                class="flex flex-col gap-2 hidden transition-all duration-500 opacity-0 transform translate-y-4">
+                <div class="flex items-center justify-between px-1">
+                    <h2 class="text-sm font-bold tracking-widest uppercase text-signal-orange flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base">warning</span>
+                        Anomaly Buffer (Failed)
+                    </h2>
+                    <button id="retry-failed-btn"
+                        class="px-3 py-1.5 bg-tech-slate text-[#eef2f5] shadow-depth rounded text-[10px] font-bold tracking-widest uppercase hover:bg-[#536874] active:translate-y-[1px] active:shadow-depth-active transition-all border-b-2 border-r-2 border-[#37464f]">
+                        Retry All
+                    </button>
+                </div>
+                <div class="bg-panel p-4 rounded border border-[#C5C2B5] shadow-sm">
+                    <div
+                        class="relative w-full max-h-48 bg-[#dcd9ce] rounded shadow-inset-panel overflow-y-auto border border-[#c5c2b5] p-2">
+                        <ul id="failed-urls-list" class="flex flex-col gap-2 font-mono text-xs text-ink/80">
+                            <!-- Populated dynamically via JS -->
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Footer / Serial Plate -->
+        <footer
+            class="bg-[#e0ded6] border-t border-[#D1CEC0] px-10 py-3 flex justify-between items-center text-[10px] text-ink/40 font-mono uppercase tracking-widest">
+            <div>MFG: SYNT-LABS-74 // <span class="text-ink/60">SER: 8991-XJ-02</span></div>
+            <div class="flex gap-2 items-center">
+                <span class="w-2 h-2 rounded-full border border-ink/20"></span>
+                <span>QC PASSED</span>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Settings Overlay & Drawer -->
+    <div id="settings-overlay" class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity opacity-0"></div>
+
+    <aside id="settings-drawer"
+        class="fixed top-0 right-0 h-full w-full max-w-sm bg-chassis border-l-4 border-[#c5c2b5] shadow-[-10px_0_20px_rgba(0,0,0,0.3)] z-50 transform translate-x-full transition-transform duration-300 ease-out flex flex-col">
+        <!-- Drawer Header -->
+        <div class="flex items-center justify-between p-6 border-b-2 border-[#d1cec0] chassis-texture">
+            <h2 class="text-xl font-bold tracking-widest uppercase flex items-center gap-2">
+                <span class="material-symbols-outlined">tune</span>
+                Configuration
+            </h2>
+            <button id="settings-close" class="text-ink/50 hover:text-signal-orange transition-colors">
+                <span class="material-symbols-outlined text-3xl">close</span>
+            </button>
+        </div>
+
+        <!-- Settings Form -->
+        <div class="p-6 overflow-y-auto flex-1 flex flex-col gap-8 chassis-texture">
+
+            <!-- Performance Section -->
+            <section class="flex flex-col gap-4">
+                <h3 class="text-xs font-bold tracking-widest uppercase text-ink/60 border-b border-[#c5c2b5] pb-2">
+                    Performance Limits</h3>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold uppercase tracking-widest flex justify-between">
+                        Concurrency
+                        <span id="label-concurrency" class="font-mono text-signal-orange">5</span>
+                    </label>
+                    <input type="range" id="config-concurrency" min="1" max="20" step="1" value="5"
+                        class="w-full accent-signal-orange">
+                    <span class="text-[9px] opacity-50">Simultaneous headless browser tabs.</span>
+                </div>
+
+                <div class="flex flex-col gap-1 mt-2">
+                    <label class="text-[10px] font-bold uppercase tracking-widest">Timeout (ms)</label>
+                    <input type="number" id="config-timeout"
+                        class="bg-panel border border-[#c5c2b5] px-3 py-2 rounded shadow-inset-panel font-mono text-sm uppercase focus:outline-none focus:border-signal-orange text-right">
+                </div>
+            </section>
+
+            <!-- IO Paths Section -->
+            <section class="flex flex-col gap-4">
+                <h3 class="text-xs font-bold tracking-widest uppercase text-ink/60 border-b border-[#c5c2b5] pb-2">I/O
+                    Paths</h3>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold uppercase tracking-widest">Target File Directory</label>
+                    <div class="flex">
+                        <input type="text" id="config-csvDir"
+                            class="flex-1 bg-panel border-y border-l border-[#c5c2b5] px-3 py-2 rounded-l shadow-inset-panel font-mono text-sm focus:outline-none focus:border-signal-orange">
+                        <button
+                            class="bg-tech-slate text-[#eef2f5] px-3 rounded-r text-[10px] font-bold tracking-widest uppercase shadow-depth active:shadow-depth-active active:translate-y-[2px] transition-all border-b border-r border-[#37464f]">Bypass</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold uppercase tracking-widest">Output Destination</label>
+                    <div class="flex">
+                        <input type="text" id="config-outputDir"
+                            class="flex-1 bg-panel border-y border-l border-[#c5c2b5] px-3 py-2 rounded-l shadow-inset-panel font-mono text-sm focus:outline-none focus:border-signal-orange">
+                        <button
+                            class="bg-tech-slate text-[#eef2f5] px-3 rounded-r text-[10px] font-bold tracking-widest uppercase shadow-depth active:shadow-depth-active active:translate-y-[2px] transition-all border-b border-r border-[#37464f]">Bypass</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Extraction Format Section -->
+            <section class="flex flex-col gap-4">
+                <h3 class="text-xs font-bold tracking-widest uppercase text-ink/60 border-b border-[#c5c2b5] pb-2">
+                    Format Parameters</h3>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex flex-col">
+                        <label class="text-[10px] font-bold uppercase tracking-widest">Strip Images</label>
+                        <span class="text-[9px] opacity-50">Remove heavy media tags.</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer group">
+                        <input type="checkbox" id="config-stripImages" class="sr-only peer">
+                        <div
+                            class="w-10 h-5 bg-[#ccc9bc] rounded shadow-inner peer-checked:bg-safety-olive transition-colors relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:shadow-sm after:rounded-sm after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5">
+                        </div>
+                    </label>
+                </div>
+
+                <div class="flex flex-col gap-1 mt-2">
+                    <label class="text-[10px] font-bold uppercase tracking-widest">Format</label>
+                    <select id="config-format"
+                        class="bg-panel border border-[#c5c2b5] px-3 py-2 rounded shadow-inset-panel font-mono text-sm uppercase focus:outline-none focus:border-signal-orange">
+                        <option value="md">Markdown (.md)</option>
+                        <option value="txt">Plain Text (.txt)</option>
+                        <option value="html">HTML (.html)</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-bold uppercase tracking-widest">Naming Convention</label>
+                    <select id="config-naming"
+                        class="bg-panel border border-[#c5c2b5] px-3 py-2 rounded shadow-inset-panel font-mono text-sm uppercase focus:outline-none focus:border-signal-orange">
+                        <option value="title">Article Title (Slugified)</option>
+                        <option value="url">Timestamped URL</option>
+                    </select>
+                </div>
+            </section>
+
+        </div>
+
+        <div class="p-4 border-t border-[#d1cec0] chassis-texture text-center opacity-50 text-[10px] font-mono">
+            SETTINGS AUTO-APPLY TO NEXT EXTRACTION
+        </div>
+    </aside>
+
+    <!-- Paste URLs Modal -->
+    <div id="paste-modal"
+        class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center backdrop-blur-sm transition-opacity opacity-0">
+        <div class="bg-chassis chassis-texture rounded border-2 border-[#c5c2b5] shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200"
+            id="paste-modal-content">
+            <div class="bg-panel border-b border-[#c5c2b5] px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold tracking-widest uppercase text-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base">list_alt</span> Manual URL Entry
+                </h3>
+                <button id="paste-close" class="text-ink/50 hover:text-signal-orange"><span
+                        class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="p-6">
+                <p class="text-xs opacity-70 mb-4">Paste URLs below, one per line. They will be saved as a temporary CSV
+                    and processed immediately if sequence is initiated.</p>
+                <textarea id="paste-textarea"
+                    class="w-full h-48 bg-lcd-bg text-lcd-text font-mono text-xs p-4 rounded shadow-inset-panel border border-[#222] focus:outline-none focus:border-signal-orange resize-none"
+                    placeholder="https://example.com/article-1&#10;https://example.com/article-2"></textarea>
+            </div>
+            <div class="bg-panel px-6 py-4 border-t border-[#c5c2b5] flex justify-end gap-3">
+                <button id="paste-cancel"
+                    class="px-4 py-2 text-xs font-bold uppercase tracking-widest text-ink/60 hover:text-ink">Cancel</button>
+                <button id="paste-submit"
+                    class="px-6 py-2 bg-tech-slate text-[#eef2f5] rounded text-xs font-bold tracking-widest uppercase shadow-depth active:shadow-depth-active active:translate-y-[2px] transition-all border-b-2 border-r-2 border-[#37464f]">Load
+                    URLs</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Run History Modal -->
+    <div id="history-modal"
+        class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center backdrop-blur-sm transition-opacity opacity-0">
+        <div class="bg-chassis chassis-texture rounded border-2 border-[#c5c2b5] shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col transform scale-95 transition-transform duration-200"
+            id="history-modal-content">
+            <div class="bg-panel border-b border-[#c5c2b5] px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold tracking-widest uppercase text-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base">history</span> Extraction Log Archives
+                </h3>
+                <button id="history-close" class="text-ink/50 hover:text-signal-orange"><span
+                        class="material-symbols-outlined">close</span></button>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-1 h-[60vh]">
+                <div id="history-list" class="flex flex-col gap-4">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
