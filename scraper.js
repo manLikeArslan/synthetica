@@ -32,7 +32,11 @@ class Scraper {
 
     loadFailedUrls() {
         if (fs.existsSync(this.failedUrlsPath)) {
-            try { return JSON.parse(fs.readFileSync(this.failedUrlsPath, 'utf8')); } catch (e) { }
+            try {
+                return JSON.parse(fs.readFileSync(this.failedUrlsPath, 'utf8'));
+            } catch (e) {
+                console.error('Error parsing failed URLs:', e);
+            }
         }
         return {};
     }
@@ -299,7 +303,11 @@ class Scraper {
         const historyPath = path.join(__dirname, 'history.json');
         let history = [];
         if (fs.existsSync(historyPath)) {
-            try { history = JSON.parse(fs.readFileSync(historyPath, 'utf8')); } catch (e) { }
+            try {
+                history = JSON.parse(fs.readFileSync(historyPath, 'utf8'));
+            } catch (e) {
+                console.error('Error parsing history:', e);
+            }
         }
 
         const runRecord = {
