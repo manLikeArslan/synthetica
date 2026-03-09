@@ -83,6 +83,40 @@ class Scraper {
         const maxRetries = currentConfig.maxRetries || 3;
 
         try {
+            const parsedUrl = new URL(url);
+            if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+                throw new Error("Invalid URL protocol. Only http and https are allowed.");
+            }
+
+            const dns = require('dns');
+            const util = require('util');
+            const lookup = util.promisify(dns.lookup);
+            try {
+                const { address } = await lookup(parsedUrl.hostname);
+
+                // IP validation for private/internal networks
+                const isLocalIP = (ip) => {
+                    if (ip === '::1') return true;
+                    if (!ip.includes('.')) return false;
+                    const parts = ip.split('.').map(Number);
+                    if (parts[0] === 10 || parts[0] === 127 || parts[0] === 0) return true;
+                    if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true;
+                    if (parts[0] === 192 && parts[1] === 168) return true;
+                    if (parts[0] === 169 && parts[1] === 254) return true;
+                    return false;
+                };
+
+                if (isLocalIP(address) || ['localhost', '::1'].includes(parsedUrl.hostname.toLowerCase())) {
+                    throw new Error("Localhost and internal IP addresses are not allowed.");
+                }
+            } catch (err) {
+                 if (err.message === "Localhost and internal IP addresses are not allowed.") {
+                    throw err;
+                 }
+                 // If DNS lookup fails, let it pass (it will fail anyway, but we log warning if needed)
+            }
+
+
             const startTime = Date.now();
             await page.goto(url, { waitUntil: 'domcontentloaded', timeout: currentConfig.timeoutMs });
 
@@ -111,8 +145,9 @@ class Scraper {
 
             const safeTitle = article.title ? article.title.trim() : `article-${Date.now()}`;
             const slug = slugify(safeTitle, { lower: true, strict: true });
-            const filename = (currentConfig.filenamePattern === 'title' ? slug : `url-${Date.now()}`) + `.${currentConfig.outputFormat}`;
-            const filePath = path.join(outputDir, filename);
+            const safeExt = String(currentConfig.outputFormat).replace(/[^a-zA-Z0-9]/g, '');
+            const filename = (currentConfig.filenamePattern === 'title' ? slug : `url-${Date.now()}`) + `.${safeExt || 'md'}`;
+            const filePath = path.join(outputDir, path.basename(filename));
             const finalMarkdown = `# ${safeTitle}\n\n*Original URL: ${url}*\n\n---\n\n${markdownContent}`;
 
             fs.writeFileSync(filePath, finalMarkdown);

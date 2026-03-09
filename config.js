@@ -24,7 +24,13 @@ function loadConfig() {
         try {
             const fileData = fs.readFileSync(CONFIG_FILE, 'utf8');
             const parsed = JSON.parse(fileData);
-            currentConfig = { ...DEFAULT_CONFIG, ...parsed };
+            currentConfig = { ...DEFAULT_CONFIG };
+            const validKeys = Object.keys(DEFAULT_CONFIG);
+            for (const key of Object.keys(parsed)) {
+                if (validKeys.includes(key)) {
+                    currentConfig[key] = parsed[key];
+                }
+            }
         } catch (e) {
             console.error('Failed to parse settings.json, using defaults:', e);
             currentConfig = { ...DEFAULT_CONFIG };
@@ -50,7 +56,13 @@ function getConfig() {
 
 // Update partial config
 function updateConfig(updates) {
-    currentConfig = { ...currentConfig, ...updates };
+    // Only update valid config fields to prevent prototype pollution
+    const validKeys = Object.keys(DEFAULT_CONFIG);
+    for (const key of Object.keys(updates)) {
+        if (validKeys.includes(key)) {
+            currentConfig[key] = updates[key];
+        }
+    }
 
     // Ensure numeric values stay numeric
     if (currentConfig.concurrency) currentConfig.concurrency = parseInt(currentConfig.concurrency, 10);
