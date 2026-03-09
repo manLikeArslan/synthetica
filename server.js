@@ -242,7 +242,9 @@ io.on('connection', (socket) => {
             if (fs.existsSync(PROCESSED_FILES_PATH)) {
                 try {
                     processedSet = new Set(JSON.parse(fs.readFileSync(PROCESSED_FILES_PATH)));
-                } catch (e) { }
+                } catch (e) {
+                    console.error('Error parsing processed URLs:', e);
+                }
             }
 
             // Instantiate and run the Scraper class
