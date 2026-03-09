@@ -7,6 +7,7 @@ const slugify = require('slugify');
 const path = require('path');
 const fs = require('fs');
 const config = require('./config');
+const { isValidUrl } = require('./urlValidator');
 
 puppeteer.use(StealthPlugin());
 
@@ -66,6 +67,19 @@ class Scraper {
         this.emitLog(`Initializing page pool (${concurrency} pages)...`);
         for (let i = 0; i < concurrency; i++) {
             const page = await this.browser.newPage();
+
+            // SSRF Protection: Intercept requests to block internal network access
+            await page.setRequestInterception(true);
+            page.on('request', async (request) => {
+                const requestUrl = request.url();
+                if (await isValidUrl(requestUrl)) {
+                    request.continue();
+                } else {
+                    this.emitLog(`<span style="color:#ffbca3">Blocked request to restricted URL:</span> ${requestUrl}`);
+                    request.abort('accessdenied');
+                }
+            });
+
             this.pagePool.push(page);
         }
     }
@@ -81,6 +95,11 @@ class Scraper {
     async processUrl(page, url, processedSet, outputDir, attempt = 1) {
         const currentConfig = config.getConfig();
         const maxRetries = currentConfig.maxRetries || 3;
+
+        // SSRF Validation
+        if (!await isValidUrl(url)) {
+            return { success: false, url, error: "Invalid URL or access to internal network restricted." };
+        }
 
         try {
             const parsedUrl = new URL(url);
