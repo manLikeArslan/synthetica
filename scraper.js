@@ -37,21 +37,21 @@ class Scraper {
         return {};
     }
 
-    saveFailedUrl(url, error) {
+    async saveFailedUrl(url, error) {
         if (!this.failedUrls[url]) {
             this.failedUrls[url] = { attempts: 0, error: '' };
         }
         this.failedUrls[url].attempts++;
         this.failedUrls[url].error = error;
         this.failedUrls[url].lastAttempt = Date.now();
-        // Batch this in production, but synchronous for now given low volume
-        fs.writeFileSync(this.failedUrlsPath, JSON.stringify(this.failedUrls, null, 2));
+        // Batch this in production, but asynchronous to avoid blocking
+        await fs.promises.writeFile(this.failedUrlsPath, JSON.stringify(this.failedUrls, null, 2));
     }
 
-    removeFailedUrl(url) {
+    async removeFailedUrl(url) {
         if (this.failedUrls[url]) {
             delete this.failedUrls[url];
-            fs.writeFileSync(this.failedUrlsPath, JSON.stringify(this.failedUrls, null, 2));
+            await fs.promises.writeFile(this.failedUrlsPath, JSON.stringify(this.failedUrls, null, 2));
         }
     }
 
@@ -118,7 +118,7 @@ class Scraper {
             fs.writeFileSync(filePath, finalMarkdown);
 
             // Success: Clean up failed log if it was there
-            this.removeFailedUrl(url);
+            await this.removeFailedUrl(url);
 
             return { success: true, url, filename, responseTimeMs };
 
@@ -128,7 +128,7 @@ class Scraper {
                 await new Promise(r => setTimeout(r, currentConfig.retryDelayMs));
                 return this.processUrl(page, url, processedSet, outputDir, attempt + 1);
             } else {
-                this.saveFailedUrl(url, err.message);
+                await this.saveFailedUrl(url, err.message);
                 return { success: false, url, error: err.message };
             }
         }
